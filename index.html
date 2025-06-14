@@ -2,22 +2,23 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Roblox ID to PNG</title>
+  <title>Roblox ID to Base64 PNG</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       padding: 2rem;
     }
-    input, button {
+    input, button, textarea {
       padding: 0.5rem;
       font-size: 1rem;
       margin-top: 1rem;
+      width: 80%;
+      max-width: 600px;
     }
-    img {
-      margin-top: 2rem;
-      max-width: 100%;
-      height: auto;
+    textarea {
+      height: 200px;
+      resize: none;
     }
     #urlBox {
       margin-top: 1rem;
@@ -30,24 +31,25 @@
   </style>
 </head>
 <body>
-  <h1>Roblox Asset ID to PNG</h1>
+  <h1>Roblox Asset ID to Base64 PNG</h1>
   <input type="text" id="assetId" placeholder="Enter Roblox Asset ID" />
-  <button onclick="showImage()">Show Image</button>
+  <br />
+  <button onclick="convertToBase64()">Convert to Base64</button>
 
   <div id="errorBox"></div>
   <div id="urlBox"></div>
-  <img id="assetImage" src="" alt="Image will appear here" />
+  <textarea id="base64Output" readonly placeholder="Base64 output will appear here"></textarea>
 
   <script>
-    function showImage() {
+    async function convertToBase64() {
       const id = document.getElementById('assetId').value.trim();
       const errorBox = document.getElementById('errorBox');
       const urlBox = document.getElementById('urlBox');
-      const imageElement = document.getElementById('assetImage');
+      const output = document.getElementById('base64Output');
 
       errorBox.textContent = '';
       urlBox.textContent = '';
-      imageElement.src = '';
+      output.value = '';
 
       if (!id || isNaN(id)) {
         errorBox.textContent = '❌ Please enter a valid numeric Asset ID.';
@@ -56,9 +58,31 @@
 
       const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
 
-      // Just set img src to Roblox URL (bypass CORS)
-      imageElement.src = url;
-      urlBox.textContent = `Image Source URL: ${url}`;
+      try {
+        const response = await fetch(url, { mode: 'cors' });
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.status} ${response.statusText}`);
+        }
+        const blob = await response.blob();
+
+        // Check if it's an image
+        if (!blob.type.startsWith('image/')) {
+          throw new Error('Fetched asset is not an image.');
+        }
+
+        // Convert blob to base64
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+
+        output.value = base64;
+        urlBox.textContent = `Image Source URL: ${url}`;
+      } catch (err) {
+        errorBox.textContent = `❌ ${err.message}`;
+      }
     }
   </script>
 </body>
