@@ -23,6 +23,10 @@
       margin-top: 1rem;
       color: #333;
     }
+    #errorBox {
+      margin-top: 1rem;
+      color: red;
+    }
   </style>
 </head>
 <body>
@@ -30,27 +34,51 @@
   <input type="text" id="assetId" placeholder="Enter Roblox Asset ID">
   <button onclick="fetchAsset()">Get PNG</button>
 
+  <div id="errorBox"></div>
   <div id="urlBox"></div>
   <img id="assetImage" src="" alt="Image will appear here">
 
   <script>
     async function fetchAsset() {
       const id = document.getElementById('assetId').value.trim();
-      const proxyUrl = 'https://www.roblox.com/asset/?id=' + id;
+      const imageElement = document.getElementById('assetImage');
+      const errorBox = document.getElementById('errorBox');
+      const urlBox = document.getElementById('urlBox');
+
+      errorBox.textContent = '';
+      urlBox.textContent = '';
+      imageElement.src = '';
+
+      if (!id || isNaN(id)) {
+        errorBox.textContent = '❌ Please enter a valid numeric Asset ID.';
+        return;
+      }
+
+      const assetUrl = `https://www.roblox.com/asset/?id=${id}`;
 
       try {
-        const response = await fetch(proxyUrl, { method: 'GET', mode: 'cors' });
+        const response = await fetch(assetUrl, { method: 'GET', mode: 'cors' });
 
         if (!response.ok) {
-          throw new Error('Asset not found or not accessible.');
+          if (response.status === 403 || response.status === 401) {
+            throw new Error('❌ This asset is private or requires authentication.');
+          } else if (response.status === 404) {
+            throw new Error('❌ Asset not found (404). Please check the ID.');
+          } else {
+            throw new Error(`❌ HTTP Error: ${response.status}`);
+          }
         }
 
-        const imageElement = document.getElementById('assetImage');
-        imageElement.src = proxyUrl;
+        const contentType = response.headers.get("content-type");
+        if (!contentType || !contentType.includes("image")) {
+          throw new Error('❌ This asset is not an image (e.g., might be a model, script, or audio).');
+        }
 
-        document.getElementById('urlBox').innerText = `Image Source: ${proxyUrl}`;
+        // If successful, show image
+        imageElement.src = assetUrl;
+        urlBox.textContent = `✅ Image Source: ${assetUrl}`;
       } catch (err) {
-        alert('Error: ' + err.message);
+        errorBox.textContent = err.message || '❌ Unknown error occurred.';
       }
     }
   </script>
