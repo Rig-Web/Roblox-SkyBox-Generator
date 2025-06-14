@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Roblox ID to PNG</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 2rem;
+    }
+    input, button {
+      padding: 0.5rem;
+      font-size: 1rem;
+      margin-top: 1rem;
+    }
+    img {
+      margin-top: 2rem;
+      max-width: 100%;
+      height: auto;
+    }
+    #urlBox {
+      margin-top: 1rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Roblox Asset ID to PNG</h1>
+  <input type="text" id="assetId" placeholder="Enter Roblox Asset ID">
+  <button onclick="fetchAsset()">Get PNG</button>
+
+  <div id="urlBox"></div>
+  <img id="assetImage" src="" alt="Image will appear here">
+
+  <script>
+    async function fetchAsset() {
+      const id = document.getElementById('assetId').value.trim();
+      const proxyUrl = 'https://assetdelivery.roblox.com/v1/asset/?id=' + id;
+
+      try {
+        const response = await fetch(proxyUrl, { method: 'GET', mode: 'cors' });
+
+        if (!response.ok) {
+          throw new Error('Asset not found or not accessible.');
+        }
+
+        const imageElement = document.getElementById('assetImage');
+        imageElement.src = proxyUrl;
+
+        document.getElementById('urlBox').innerText = `Image Source: ${proxyUrl}`;
+      } catch (err) {
+        alert('Error: ' + err.message);
+      }
+    }
+  </script>
+</body>
+</html>
