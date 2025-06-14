@@ -36,7 +36,7 @@
   <script>
     async function fetchAsset() {
       const id = document.getElementById('assetId').value.trim();
-      const proxyUrl = 'https://assetdelivery.roblox.com/v1/asset/?id=' + id;
+      const proxyUrl = 'https://www.roblox.com/asset/?id=' + id;
 
       try {
         const response = await fetch(proxyUrl, { method: 'GET', mode: 'cors' });
